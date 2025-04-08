@@ -1,0 +1,59 @@
+name: Push GHCR Image to AWS ECR
+
+on:
+  workflow_dispatch:  # 수동 실행 가능하게
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: ecr-timbel-nginx # ← 받은 정보로 변경
+  GHCR_IMAGE: ghcr.io/mintaekkim/nginx  # ← 실제 GHCR 이미지로 변경
+  IMAGE_TAG: 4.4.19
+
+jobs:
+  push-to-ecr:
+    name: Pull from GHCR and Push to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code (optional)
+      uses: actions/checkout@v4
+
+    #- name: Docker Login to GHCR
+     # run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u mintaekkim --password-stdin
+    - name: Login to GitHub Container Registry (GHCR)
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: mintaekkim
+        password: ${{ secrets.GHCR_PAT }}
+
+    - name: Pull image from GHCR
+      run: docker pull $GHCR_IMAGE:$IMAGE_TAG
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Tag and Push image to ECR
+      run: |
+        ECR_URI=${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}
+        echo "Tagging from: $GHCR_IMAGE:$IMAGE_TAG"
+        echo "Tagging to  : $ECR_URI:$IMAGE_TAG"
+        docker images  # 디버깅용
+        docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
+        docker push $ECR_URI:$IMAGE_TAG
+
+    - name: Login to GitHub Container Registry (GHCR)
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: mintaekkim
+        password: ${{ secrets.GHCR_PAT }}
+
