@@ -7,7 +7,7 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: ecr-timbel-rabbitmq # ← 받은 정보로 변경
   GHCR_IMAGE: ghcr.io/mintaekkim/rabbitmq  # ← 실제 GHCR 이미지로 변경
-  IMAGE_TAG: 3-management
+  IMAGE_TAG: 3-management 
 
 jobs:
   push-to-ecr:
