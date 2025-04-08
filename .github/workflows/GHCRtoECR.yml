@@ -38,9 +38,9 @@ jobs:
     - name: Tag and Push image to ECR
       run: |
         ECR_URI=${{ steps.login-ecr.outputs.registry }}/${ECR_REPOSITORY}
-        echo "🐳 Tagging image from $GHCR_IMAGE:$IMAGE_TAG"
-        echo "📦 Tagging to $ECR_URI:$IMAGE_TAG"
-        docker images  # 디버깅용 출력
+        echo "Tagging from: $GHCR_IMAGE:$IMAGE_TAG"
+        echo "Tagging to  : $ECR_URI:$IMAGE_TAG"
+        docker images  # 디버깅용
         docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
         docker push $ECR_URI:$IMAGE_TAG
 
