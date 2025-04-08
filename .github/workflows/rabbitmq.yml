@@ -11,7 +11,7 @@ env:
 
 jobs:
   push-to-ecr:
-    name: Pull from GHCR and Push to ECR
+    name: Pull from GHCR and Push to ECR #이름 변경해야 레포 관리 편함 예를들어 rabbitmq
     runs-on: ubuntu-latest
 
     steps:
