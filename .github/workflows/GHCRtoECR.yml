@@ -38,6 +38,6 @@ jobs:
       env:
         ACCOUNT_ID: ${{ steps.login-ecr.outputs.registry }}
       run: |
-        ECR_URI=841162713347.dkr.ecr.ap-northeast-2.amazonaws.com/${ECR_REPOSITORY}
-        docker tag $GHCR_IMAGE $ECR_URI:$IMAGE_TAG
+        ECR_URI=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/${ECR_REPOSITORY}
+        docker tag $GHCR_IMAGE:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
         docker push $ECR_URI:$IMAGE_TAG
