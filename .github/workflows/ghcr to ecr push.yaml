@@ -2,62 +2,51 @@ name: Push Multiple GHCR Images to AWS ECR
 
 on:
   workflow_dispatch:  # 수동 실행 가능
-
 env:
   AWS_REGION: ap-northeast-2
 
 jobs:
   push-to-ecr:
-    name: Pull from GHCR and Push to ECR
     runs-on: ubuntu-latest
-
     strategy:
+      fail-fast: false      # ← 첫 번째 실패로 매트릭스 전체가 중단되는 걸 막아줌
       matrix:
         include:
-          # ───── 여기에 원하는 이미지·태그 쌍을 나열 ─────
           - ghcr_image: ghcr.io/timbel-haiv/master
             image_tag: 4.3.2
             ecr_repository: ecr-timbel-master
-          - ghcr_image: ghcr.io/timbel-haiv/haiv-ee
-            image_tag: 4.5.schema_memory_kafka2
-            ecr_repository: ecr-timbel-haiv-ee
-          - ghcr_image: ghcr.io/timbel-haiv/saiz_fnt
-            image_tag: 4.6.18.1
-            ecr_repository: ecr-timbel-saiz_fnt
           - ghcr_image: ghcr.io/timbel-haiv/saiz_api
             image_tag: 4.6.18.1
             ecr_repository: ecr-timbel-saiz_api
-          # ────────────────────────────────────────────
-
+          - ghcr_image: ghcr.io/timbel-haiv/saiz_fnt
+            image_tag: 4.6.18.1
+            ecr_repository: ecr-timbel-saiz_fnt
+          # …추가 이미지·태그 블록 계속…
     steps:
-      - name: Checkout code (optional)
+      - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: mintaekkim
+          username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
-
       - name: Pull image from GHCR
         run: |
           docker pull ${{ matrix.ghcr_image }}:${{ matrix.image_tag }}
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
-
-      - name: Log in to Amazon ECR
+      - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
+        uses: aws-actions/amazon-ecr-login@v2   # ← v2로 올리면 mask-password가 기본 true
       - name: Tag & Push image to ECR
         run: |
           ECR_URI=${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repository }}
           echo ">> Pushing ${{ matrix.ghcr_image }}:${{ matrix.image_tag }} → $ECR_URI:${{ matrix.image_tag }}"
           docker tag ${{ matrix.ghcr_image }}:${{ matrix.image_tag }} $ECR_URI:${{ matrix.image_tag }}
           docker push $ECR_URI:${{ matrix.image_tag }}
+
