@@ -14,13 +14,16 @@ jobs:
         include:
           - ghcr_image: ghcr.io/timbel-haiv/master
             image_tag: 4.3.2
-            ecr_repository: ecr-timbel-master
+            ecr_repository: ecr-timbel-haiv-master
           - ghcr_image: ghcr.io/timbel-haiv/saiz_api
             image_tag: 4.6.18.1
-            ecr_repository: ecr-timbel-saiz_api
+            ecr_repository: ecr-timbel-haiv-saiz_api
           - ghcr_image: ghcr.io/timbel-haiv/saiz_fnt
             image_tag: 4.6.18.1
-            ecr_repository: ecr-timbel-saiz_fnt
+            ecr_repository: ecr-timbel-haiv-saiz_fnt
+          - ghcr_image: ghcr.io/timbel-haiv/haiv-ee
+            image_tag: 4.5.schema_memory_kafka2
+            ecr_repository: ecr-timbel-haiv-haiv-ee
           # …추가 이미지·태그 블록 계속…
     steps:
       - name: Checkout code
