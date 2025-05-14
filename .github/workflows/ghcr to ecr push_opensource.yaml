@@ -1,0 +1,44 @@
+name: Mirror Open-Source Images to AWS ECR
+on:
+  workflow_dispatch:
+env:
+  AWS_REGION: ap-northeast-2
+jobs:
+  mirror-to-ecr:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ─── 공개 이미지·태그 목록 ───
+          - src_image: nginx
+            src_tag: latest
+            ecr_repository: ecr-nginx
+          - src_image: redis
+            src_tag: 6-alpine
+            ecr_repository: ecr-redis
+          - src_image: alpine
+            src_tag: 3.14
+            ecr_repository: ecr-alpine
+          # ───────────────────────────────
+    steps:
+      - name: Pull image from Docker Hub
+        run: |
+          docker pull ${{ matrix.src_image }}:${{ matrix.src_tag }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Tag & Push image to ECR
+        run: |
+          SRC="${{ matrix.src_image }}:${{ matrix.src_tag }}"
+          ECR_URI="${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repository }}"
+          echo "Mirroring $SRC → $ECR_URI:${{ matrix.src_tag }}"
+          docker tag $SRC $ECR_URI:${{ matrix.src_tag }}
+          docker push $ECR_URI:${{ matrix.src_tag }}
