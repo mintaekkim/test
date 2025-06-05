@@ -1,4 +1,4 @@
-name: Mirror Open-Source Images to AWS ECR
+name: Open-Source Images to AWS ECR V
 on:
   workflow_dispatch:
 env:
