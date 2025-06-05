@@ -1,4 +1,4 @@
-name: Push Multiple GHCR Images to AWS ECR
+name: Push GHCR Images to AWS ECR V
 
 on:
   workflow_dispatch:  # 수동 실행 가능
