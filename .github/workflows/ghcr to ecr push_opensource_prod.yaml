@@ -1,0 +1,59 @@
+name: Open-Source Images to AWS ECR Prod
+on:
+  workflow_dispatch:
+env:
+  AWS_REGION: ap-northeast-2
+jobs:
+  mirror-to-ecr:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ─── 공개 이미지·태그 목록 ───
+          - src_image: postgres
+            src_tag: 14.1
+            ecr_repository: ecr-timbel-haiv-postgres
+          - src_image: grafana/grafana
+            src_tag: 10.3.4
+            ecr_repository: ecr-timbel-haiv-grafana
+          - src_image: prom/prometheus
+            src_tag: v2.50.0	
+            ecr_repository: ecr-timbel-haiv-prometheus
+          - src_image: docker.io/bitnami/keycloak-config-cli
+            src_tag: 5.9.0-debian-11-r1
+            ecr_repository: ecr-timbel-haiv-keycloak
+          - src_image: docker.io/bitnami/kafka
+            src_tag: 3.6.1-debian-11-r0
+            ecr_repository: ecr-timbel-haiv-kafka
+          - src_image: quay.io/minio/operator
+            src_tag: v5.0.15
+            ecr_repository: ecr-timbel-haiv-minio-operator
+          - src_image: minio/minio
+            src_tag: RELEASE.2025-04-08T15-41-24Z
+            ecr_repository: ecr-timbel-haiv-minio
+          - src_image: nginx
+            src_tag: stable
+            ecr_repository: ecr-timbel-haiv-nginx
+          # ───────────────────────────────
+    steps:
+      - name: Pull image from Docker Hub
+        run: |
+          docker pull ${{ matrix.src_image }}:${{ matrix.src_tag }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID3 }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY3 }}
+          aws-region:            ${{ env.AWS_REGION }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Tag & Push image to ECR
+        run: |
+          SRC="${{ matrix.src_image }}:${{ matrix.src_tag }}"
+          ECR_URI="${{ steps.login-ecr.outputs.registry }}/${{ matrix.ecr_repository }}"
+          echo "Mirroring $SRC → $ECR_URI:${{ matrix.src_tag }}"
+          docker tag $SRC $ECR_URI:${{ matrix.src_tag }}
+          docker push $ECR_URI:${{ matrix.src_tag }}
